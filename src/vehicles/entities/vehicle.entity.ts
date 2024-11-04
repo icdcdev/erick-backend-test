@@ -7,6 +7,7 @@ export class Vehicle {
   @Prop({
     type: MongooseSchema.Types.ObjectId,
     trim: true,
+    ref: 'Client',
   })
   clientId: MongooseSchema.Types.ObjectId;
   @Prop({

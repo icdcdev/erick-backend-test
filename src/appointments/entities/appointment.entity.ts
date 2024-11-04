@@ -8,20 +8,27 @@ export class Appointment {
   @Prop({
     type: String,
     trim: true,
+    ref: 'Client',
   })
-  clientId: string;
+  clientId: MongooseSchema.Types.ObjectId;
   @Prop({
     type: String,
     trim: true,
+    ref: 'Vehicle',
   })
-  vehicleId: string;
+  vehicleId: MongooseSchema.Types.ObjectId;
   @Prop({
     type: Date,
   })
-  date: Date;
+  startDate: Date;
+  @Prop({
+    type: Date,
+  })
+  endDate: Date;
   @Prop({
     trim: true,
     enum: StatusAppointment,
+    default: StatusAppointment.HABILITADA,
   })
   status: StatusAppointment;
   @Prop({
