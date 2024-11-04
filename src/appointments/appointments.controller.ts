@@ -1,7 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { DateRangeDto } from './dto/date-filter';
+import { MongoId } from 'src/common/dto/id-mongo';
 
 @Controller('appointments')
 export class AppointmentsController {
@@ -13,22 +27,25 @@ export class AppointmentsController {
   }
 
   @Get()
-  findAll() {
-    return this.appointmentsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.appointmentsService.findOne(+id);
+  findAll(@Query() dateFilterDto: DateRangeDto) {
+    return this.appointmentsService.findAllByDateRange(dateFilterDto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAppointmentDto: UpdateAppointmentDto) {
-    return this.appointmentsService.update(+id, updateAppointmentDto);
+  update(
+    @Param() params: MongoId,
+    @Body() updateAppointmentDto: UpdateAppointmentDto,
+  ) {
+    return this.appointmentsService.update(params.id, updateAppointmentDto);
+  }
+
+  @Get(':id')
+  findOne(@Param() params: MongoId) {
+    return this.appointmentsService.findOne(params.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.appointmentsService.remove(+id);
+  remove(@Param() params: MongoId) {
+    return this.appointmentsService.remove(params.id);
   }
 }
