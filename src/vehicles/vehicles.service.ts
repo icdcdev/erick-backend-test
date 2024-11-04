@@ -24,12 +24,15 @@ export class VehiclesService {
 
   async findAll(paginationDto: PaginationDto) {
     const { skip, limit } = paginationDto;
-    return await this.vehicleModel.find().skip(skip).limit(limit);
+    return await this.vehicleModel
+      .find({ isDeleted: false })
+      .skip(skip)
+      .limit(limit);
   }
 
   async findOne(id: string) {
     const vehicle = await this.vehicleModel.findById(id);
-    if (!vehicle) {
+    if (!vehicle || vehicle.isDeleted) {
       throw new NotFoundException('Vehicle not found');
     }
     return vehicle;
