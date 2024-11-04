@@ -15,7 +15,10 @@ export class VehiclesService {
   ) {}
   async create(createVehicleDto: CreateVehicleDto) {
     const { clientId } = createVehicleDto;
-    const client = await this.clientModel.findById(clientId);
+    const client = await this.clientModel.find({
+      _id: clientId,
+      isDeleted: false,
+    });
     if (!client) {
       throw new NotFoundException('Client not found');
     }
@@ -27,11 +30,12 @@ export class VehiclesService {
     return await this.vehicleModel
       .find({ isDeleted: false })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate('clientId');
   }
 
   async findOne(id: string) {
-    const vehicle = await this.vehicleModel.findById(id);
+    const vehicle = await this.vehicleModel.findById(id).populate('clientId');
     if (!vehicle || vehicle.isDeleted) {
       throw new NotFoundException('Vehicle not found');
     }
