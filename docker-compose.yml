@@ -5,6 +5,6 @@ services:
     container_name: prueba-altem
     build: .
     ports:
-      - '8000:8000'
+      - '3000:3000'
     environment:
       - MONGODB_URL=${MONGODB_URL}
