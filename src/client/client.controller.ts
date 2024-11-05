@@ -13,6 +13,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { MongoId } from 'src/common/dto/id-mongo';
+import { Uuid } from 'src/common/dto/id-uuid';
 
 @Controller('client')
 export class ClientController {
@@ -29,17 +30,17 @@ export class ClientController {
   }
 
   @Get(':id')
-  findOne(@Param() params: MongoId) {
+  findOne(@Param() params: Uuid) {
     return this.clientService.findOne(params.id);
   }
 
   @Patch(':id')
-  update(@Param() params: MongoId, @Body() updatePatientDto: UpdateClientDto) {
+  update(@Param() params: Uuid, @Body() updatePatientDto: UpdateClientDto) {
     return this.clientService.update(params.id, updatePatientDto);
   }
 
   @Delete(':id')
-  remove(@Param() params: MongoId) {
+  remove(@Param() params: Uuid) {
     return this.clientService.delete(params.id);
   }
 }

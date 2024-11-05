@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StatusAppointment {
+  HABILITADA
+  DESABILITADA
+}
+
+enum TimeZone {
+  UTC
+  America_New_York
+  America_Chicago
+  America_Denver
+  America_Los_Angeles
+  Europe_London
+  Europe_Paris
+  Asia_Kolkata
+  Asia_Tokyo
+  Australia_Sydney
+  Pacific_Auckland
+  America_Mexico_City
+}
+
+model Client {
+  id              String   @id @default(uuid())
+  name            String
+  paternalSurname String
+  maternalSurname String
+  timeZone        TimeZone
+  address         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// model Appointment {
+//   id String @id @default(uuid())
+
+//   clientId 
+
+//   vehicleId: MongooseSchema.Types.ObjectId
+
+//   startDate Date
+
+//   endDate Date
+
+//   status StatusAppointment
+
+//   comment: string;
+
+//   isDeleted: Boolean;
+
+//   createdAt: Date;
+
+//   updatedAt: Date;
+// }

@@ -4,24 +4,22 @@ import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Vehicle } from './entities/vehicle.entity';
 import { Model } from 'mongoose';
-import { Client } from 'src/client/entities/client.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class VehiclesService {
   constructor(
-    @InjectModel(Client.name) private readonly clientModel: Model<Client>,
     @InjectModel(Vehicle.name) private readonly vehicleModel: Model<Vehicle>,
   ) {}
   async create(createVehicleDto: CreateVehicleDto) {
     const { clientId } = createVehicleDto;
-    const client = await this.clientModel.find({
-      _id: clientId,
-      isDeleted: false,
-    });
-    if (!client) {
-      throw new NotFoundException('Client not found');
-    }
+    // const client = await this.clientModel.find({
+    //   _id: clientId,
+    //   isDeleted: false,
+    // });
+    // if (!client) {
+    //   throw new NotFoundException('Client not found');
+    // }
     return await this.vehicleModel.create(createVehicleDto);
   }
 

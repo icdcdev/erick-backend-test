@@ -26,7 +26,7 @@ export class CreateClientDto {
   @MaxLength(30)
   maternalSurname: string;
   @IsEnum(TimeZone)
-  timeZone: string;
+  timeZone: TimeZone;
   @IsString()
   @IsNotEmpty()
   @MinLength(10)

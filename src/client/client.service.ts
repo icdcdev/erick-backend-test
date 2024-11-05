@@ -1,45 +1,48 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
-import { Client } from './entities/client.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class ClientService {
-  constructor(
-    @InjectModel(Client.name) private readonly clientModel: Model<Client>,
-  ) {}
+export class ClientService extends PrismaClient implements OnModuleInit {
+  async onModuleInit() {
+    await this.$connect();
+  }
 
   async create(createClientDto: CreateClientDto) {
-    return await this.clientModel.create(createClientDto);
+    return await this.client.create({
+      data: createClientDto,
+    });
   }
 
   async findAll(paginationDto: PaginationDto) {
     const { skip, limit } = paginationDto;
-    return await this.clientModel
-      .find({ isDeleted: false })
-      .skip(skip)
-      .limit(limit);
+    return await this.client.findMany({
+      skip,
+      take: limit,
+    });
   }
 
   async findOne(id: string) {
-    const client = await this.clientModel.findById(id);
-    if (!client || client.isDeleted) {
+    const client = await this.client.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!client) {
       throw new NotFoundException('Client not found');
     }
     return client;
   }
 
   async update(id: string, updateClientDto: UpdateClientDto) {
-    const client = await this.clientModel.findByIdAndUpdate(
-      id,
-      updateClientDto,
-      {
-        new: true,
+    const client = await this.client.update({
+      where: {
+        id,
       },
-    );
+      data: updateClientDto,
+    });
     if (!client) {
       throw new NotFoundException('Client not found');
     }
@@ -47,8 +50,10 @@ export class ClientService {
   }
 
   async delete(id: string) {
-    const client = await this.clientModel.findByIdAndUpdate(id, {
-      isDeleted: true,
+    const client = await this.client.delete({
+      where: {
+        id,
+      },
     });
     if (!client) {
       throw new NotFoundException('Client not found');
