@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  clinica-app:
+    container_name: prueba-altem
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - MONGODB_URL=${MONGODB_URL}
