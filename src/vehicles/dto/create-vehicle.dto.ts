@@ -12,7 +12,9 @@ import {
 export class CreateVehicleDto {
   @IsString()
   @IsNotEmpty()
-  @IsMongoId()
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/, {
+    message: 'Invalid UUID format',
+  })
   clientId: string;
   @IsString()
   @IsNotEmpty()

@@ -1,27 +1,27 @@
 import {
   IsEnum,
-  IsInt,
   IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
   Matches,
-  Max,
   MaxLength,
-  Min,
   MinLength,
-  ValidateIf,
 } from 'class-validator';
 import { StatusAppointment } from '../enums/status';
 
 export class CreateAppointmentDto {
   @IsString()
   @IsNotEmpty()
-  @IsMongoId()
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/, {
+    message: 'Invalid UUID format',
+  })
   clientId: string;
   @IsString()
   @IsNotEmpty()
-  @IsMongoId()
+  @Matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/, {
+    message: 'Invalid UUID format',
+  })
   vehicleId: string;
   @IsNotEmpty()
   @Matches(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/, {

@@ -7,15 +7,12 @@ import {
   Param,
   Delete,
   Query,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { DateRangeDto } from './dto/date-filter';
-import { MongoId } from 'src/common/dto/id-mongo';
+import { Uuid } from 'src/common/dto/id-uuid';
 
 @Controller('appointments')
 export class AppointmentsController {
@@ -33,19 +30,19 @@ export class AppointmentsController {
 
   @Patch(':id')
   update(
-    @Param() params: MongoId,
+    @Param() params: Uuid,
     @Body() updateAppointmentDto: UpdateAppointmentDto,
   ) {
     return this.appointmentsService.update(params.id, updateAppointmentDto);
   }
 
   @Get(':id')
-  findOne(@Param() params: MongoId) {
+  findOne(@Param() params: Uuid) {
     return this.appointmentsService.findOne(params.id);
   }
 
   @Delete(':id')
-  remove(@Param() params: MongoId) {
+  remove(@Param() params: Uuid) {
     return this.appointmentsService.remove(params.id);
   }
 }

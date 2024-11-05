@@ -2,52 +2,81 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Vehicle } from './entities/vehicle.entity';
 import { Model } from 'mongoose';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class VehiclesService {
-  constructor(
-    @InjectModel(Vehicle.name) private readonly vehicleModel: Model<Vehicle>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
   async create(createVehicleDto: CreateVehicleDto) {
-    const { clientId } = createVehicleDto;
-    // const client = await this.clientModel.find({
-    //   _id: clientId,
-    //   isDeleted: false,
-    // });
-    // if (!client) {
-    //   throw new NotFoundException('Client not found');
-    // }
-    return await this.vehicleModel.create(createVehicleDto);
+    const { clientId, ...vehicleData } = createVehicleDto;
+    const client = await this.prisma.client.findUnique({
+      where: {
+        id: clientId,
+      },
+    });
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+    return await this.prisma.vehicle.create({
+      data: {
+        ...vehicleData,
+        client: {
+          connect: { id: clientId },
+        },
+      },
+    });
   }
 
   async findAll(paginationDto: PaginationDto) {
     const { skip, limit } = paginationDto;
-    return await this.vehicleModel
-      .find({ isDeleted: false })
-      .skip(skip)
-      .limit(limit)
-      .populate('clientId');
+    return await this.prisma.vehicle.findMany({
+      skip,
+      take: limit,
+      include: {
+        client: true,
+      },
+    });
   }
 
   async findOne(id: string) {
-    const vehicle = await this.vehicleModel.findById(id).populate('clientId');
-    if (!vehicle || vehicle.isDeleted) {
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        client: true,
+      },
+    });
+    if (!vehicle) {
       throw new NotFoundException('Vehicle not found');
     }
     return vehicle;
   }
 
   async update(id: string, updateVehicleDto: UpdateVehicleDto) {
-    const vehicle = await this.vehicleModel.findByIdAndUpdate(
-      id,
-      updateVehicleDto,
-      {
-        new: true,
+    const { clientId } = updateVehicleDto;
+    if (clientId) {
+      const client = await this.prisma.client.findUnique({
+        where: {
+          id: clientId,
+        },
+      });
+      if (!client) {
+        throw new NotFoundException('Client not found');
+      }
+    }
+    const vehicle = await this.prisma.vehicle.update({
+      where: {
+        id,
       },
-    );
+      data: updateVehicleDto,
+      include: {
+        client: true,
+      },
+    });
     if (!vehicle) {
       throw new NotFoundException('Vehicle not found');
     }
@@ -55,8 +84,10 @@ export class VehiclesService {
   }
 
   async remove(id: string) {
-    const vehicle = await this.vehicleModel.findByIdAndUpdate(id, {
-      isDeleted: true,
+    const vehicle = await this.prisma.vehicle.delete({
+      where: {
+        id,
+      },
     });
     if (!vehicle) {
       throw new NotFoundException('Vehicle not found');

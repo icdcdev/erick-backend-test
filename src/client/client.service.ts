@@ -1,31 +1,29 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class ClientService extends PrismaClient implements OnModuleInit {
-  async onModuleInit() {
-    await this.$connect();
-  }
+export class ClientService {
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createClientDto: CreateClientDto) {
-    return await this.client.create({
+    return await this.prisma.client.create({
       data: createClientDto,
     });
   }
 
   async findAll(paginationDto: PaginationDto) {
     const { skip, limit } = paginationDto;
-    return await this.client.findMany({
+    return await this.prisma.client.findMany({
       skip,
       take: limit,
     });
   }
 
   async findOne(id: string) {
-    const client = await this.client.findUnique({
+    const client = await this.prisma.client.findUnique({
       where: {
         id,
       },
@@ -37,7 +35,7 @@ export class ClientService extends PrismaClient implements OnModuleInit {
   }
 
   async update(id: string, updateClientDto: UpdateClientDto) {
-    const client = await this.client.update({
+    const client = await this.prisma.client.update({
       where: {
         id,
       },
@@ -50,7 +48,7 @@ export class ClientService extends PrismaClient implements OnModuleInit {
   }
 
   async delete(id: string) {
-    const client = await this.client.delete({
+    const client = await this.prisma.client.delete({
       where: {
         id,
       },

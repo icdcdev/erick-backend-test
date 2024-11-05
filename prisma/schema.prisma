@@ -34,34 +34,42 @@ enum TimeZone {
 }
 
 model Client {
-  id              String   @id @default(uuid())
+  id              String        @id @default(uuid())
   name            String
   paternalSurname String
   maternalSurname String
   timeZone        TimeZone
   address         String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  Vehicle         Vehicle[]
+  Appointment     Appointment[]
 }
 
-// model Appointment {
-//   id String @id @default(uuid())
+model Vehicle {
+  id            String        @id @default(uuid())
+  client        Client?       @relation(fields: [clientId], references: [id])
+  clientId      String?
+  vin           String
+  licensePlates String
+  color         String
+  year          Int
+  model         String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  Appointment   Appointment[]
+}
 
-//   clientId 
-
-//   vehicleId: MongooseSchema.Types.ObjectId
-
-//   startDate Date
-
-//   endDate Date
-
-//   status StatusAppointment
-
-//   comment: string;
-
-//   isDeleted: Boolean;
-
-//   createdAt: Date;
-
-//   updatedAt: Date;
-// }
+model Appointment {
+  id        String            @id @default(uuid())
+  client    Client?           @relation(fields: [clientId], references: [id])
+  clientId  String?
+  vehicle   Vehicle?          @relation(fields: [vehicleId], references: [id])
+  vehicleId String?
+  startDate DateTime
+  endDate   DateTime
+  status    StatusAppointment @default(HABILITADA)
+  comment   String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}

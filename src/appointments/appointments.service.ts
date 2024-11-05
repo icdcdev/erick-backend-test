@@ -5,39 +5,48 @@ import {
 } from '@nestjs/common';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Appointment } from './entities/appointment.entity';
-import { Model } from 'mongoose';
-import { Vehicle } from 'src/vehicles/entities/vehicle.entity';
 import { DateRangeDto } from './dto/date-filter';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AppointmentsService {
-  constructor(
-    @InjectModel(Appointment.name)
-    private readonly appointmentModel: Model<Appointment>,
-    @InjectModel(Vehicle.name)
-    private readonly vehicleModel: Model<Vehicle>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createAppointmentDto: CreateAppointmentDto) {
-    const { clientId, startDate, endDate } = createAppointmentDto;
-    // const client = await this.clientModel.find({
-    //   _id: clientId,
-    //   isDeleted: false,
-    // });
-    // if (!client) {
-    //   throw new NotFoundException('Client not found');
-    // }
-    const vehicle = await this.vehicleModel.find({
-      _id: createAppointmentDto.vehicleId,
-      isDeleted: false,
-    });
+    const { clientId, startDate, endDate, vehicleId, ...appointmentData } =
+      createAppointmentDto;
+    const [client, vehicle] = await Promise.all([
+      this.prisma.client.findUnique({
+        where: {
+          id: clientId,
+        },
+      }),
+      this.prisma.vehicle.findUnique({
+        where: {
+          id: vehicleId,
+        },
+      }),
+    ]);
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
     if (!vehicle) {
       throw new NotFoundException('Vehicle not found');
     }
-    await this.validateDateAppointment(startDate, endDate);
-    return await this.appointmentModel.create(createAppointmentDto);
+    await this.validateDateAppointment(new Date(startDate), new Date(endDate));
+    return await this.prisma.appointment.create({
+      data: {
+        ...appointmentData,
+        client: {
+          connect: { id: clientId },
+        },
+        vehicle: {
+          connect: { id: vehicleId },
+        },
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+      },
+    });
   }
 
   async validateDateAppointment(startDate: Date, endDate: Date) {
@@ -46,62 +55,69 @@ export class AppointmentsService {
         'La fecha de inicio no puede ser posterior o igual a la fecha de fin',
       );
     }
-    const appointments = await this.appointmentModel.findOne({
-      $or: [
-        {
-          startDate: { $lte: endDate },
-          endDate: { $gte: startDate },
-        },
-      ],
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        OR: [
+          { startDate: { lte: endDate }, endDate: { gte: startDate } },
+          { startDate: { gte: startDate, lte: endDate } },
+          { endDate: { gte: startDate, lte: endDate } },
+        ],
+      },
     });
-    if (appointments) {
+    if (appointments.length > 0) {
       throw new ConflictException('Appointment already exists');
     }
   }
 
   async findAllByDateRange(dateFilterDto: DateRangeDto) {
     const { skip, limit, startDate, endDate } = dateFilterDto;
-    return await this.appointmentModel
-      .find({
-        isDeleted: false,
-        startDate: { $gte: startDate },
-        endDate: { $lte: endDate },
-      })
-      .skip(skip)
-      .limit(limit)
-      .populate(['clientId', 'vehicleId']);
+    return await this.prisma.appointment.findMany({
+      where: {
+        startDate: { gte: new Date(startDate) },
+        endDate: { lte: new Date(endDate) },
+      },
+      skip,
+      take: limit,
+      include: {
+        client: true,
+        vehicle: true,
+      },
+    });
   }
 
   async findOne(id: string) {
-    const appointment = await this.appointmentModel.findById(id);
-    if (!appointment || appointment.isDeleted) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        client: true,
+        vehicle: true,
+      },
+    });
+    if (!appointment) {
       throw new NotFoundException('Appointment not found');
     }
     return appointment;
   }
 
   async update(id: string, updateAppointmentDto: UpdateAppointmentDto) {
-    const { startDate, endDate, clientId, vehicleId } = updateAppointmentDto;
-    // if (clientId) {
-    //   const client = await this.clientModel.findById(clientId);
-    //   if (!client) {
-    //     throw new NotFoundException('Client not found');
-    //   }
-    // }
-    if (vehicleId) {
-      const vehicle = await this.vehicleModel.findById(vehicleId);
-      if (!vehicle) {
-        throw new NotFoundException('Vehicle not found');
-      }
-    }
-    await this.validateDateAppointment(startDate, endDate);
-    const appointment = await this.appointmentModel.findByIdAndUpdate(
-      id,
-      updateAppointmentDto,
-      {
-        new: true,
+    const { startDate, endDate } = updateAppointmentDto;
+    //await this.validateDateAppointment(startDate, endDate);
+    const appointment = await this.prisma.appointment.update({
+      where: {
+        id,
       },
-    );
+      data: {
+        ...updateAppointmentDto,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+      },
+      include: {
+        client: true,
+        vehicle: true,
+      },
+    });
     if (!appointment) {
       throw new NotFoundException('Appointment not found');
     }
@@ -109,8 +125,10 @@ export class AppointmentsService {
   }
 
   async remove(id: string) {
-    const appointment = await this.appointmentModel.findByIdAndUpdate(id, {
-      isDeleted: true,
+    const appointment = await this.prisma.appointment.delete({
+      where: {
+        id,
+      },
     });
     if (!appointment) {
       throw new NotFoundException('Appointment not found');
