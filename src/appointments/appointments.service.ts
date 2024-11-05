@@ -46,6 +46,10 @@ export class AppointmentsService {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
       },
+      include: {
+        client: true,
+        vehicle: true,
+      },
     });
   }
 
@@ -103,7 +107,7 @@ export class AppointmentsService {
 
   async update(id: string, updateAppointmentDto: UpdateAppointmentDto) {
     const { startDate, endDate } = updateAppointmentDto;
-    //await this.validateDateAppointment(startDate, endDate);
+    await this.validateDateAppointment(startDate, endDate);
     const appointment = await this.prisma.appointment.update({
       where: {
         id,
